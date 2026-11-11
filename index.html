@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Michele Nicks">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#0b0b0c">
+<meta name="robots" content="noindex, nofollow">
+<title>Michele Nicks</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-512.png">
+<style>
+html,body{margin:0;min-height:100%;background:#0b0b0c}
+#wait{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#d9a441;font:600 17px system-ui,-apple-system,sans-serif;text-align:center;padding:24px}
+#wait .msg{color:#f3f1ec}
+#wait button{display:none;background:#d9a441;color:#111;border:0;border-radius:10px;padding:12px 22px;font:700 16px system-ui,-apple-system,sans-serif}
+.dot{width:36px;height:36px;border:3px solid #333;border-top-color:#d9a441;border-radius:50%;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="wait"><div class="dot" id="dot"></div><div class="msg" id="msg">Opening Michele's app…</div><button id="again" type="button">Try again</button></div>
+<script>
+(function(){
+  var EXEC='https://script.google.com/macros/s/AKfycbynyEmctcx9Lf4AVluI9ODK0An8YR7DspanoIVg0lTFLQGnywcy72XeRpTMhOu6lRo/exec';
+  var KEY=(location.hash.match(/k=([A-Za-z0-9]+)/)||[])[1]||'';
+  var ICONS='<link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-512.png">'+
+    '<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">'+
+    '<meta name="apple-mobile-web-app-title" content="Michele Nicks"><meta name="theme-color" content="#0b0b0c"><title>Michele Nicks</title>';
+
+  // Calls the SanoCare script without any Google sign-in (no cookies are sent).
+  function call(fn,args){
+    return fetch(EXEC,{method:'POST',credentials:'omit',redirect:'follow',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({k:KEY,fn:fn,args:args})})
+    .then(function(r){if(!r.ok)throw new Error('Connection problem ('+r.status+')');return r.json()})
+    .then(function(d){if(!d.ok)throw new Error(d.error||'Something went wrong');return d.result});
+  }
+  // Stand-in for google.script.run so the app page works unchanged.
+  var SHIM='<script>(function(){var EXEC='+JSON.stringify(EXEC)+',KEY='+JSON.stringify(KEY)+';'+
+    'function call(fn,a){return fetch(EXEC,{method:"POST",credentials:"omit",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({k:KEY,fn:fn,args:a})})'+
+    '.then(function(r){if(!r.ok)throw new Error("Connection problem ("+r.status+")");return r.json()})'+
+    '.then(function(d){if(!d.ok)throw new Error(d.error||"Something went wrong");return d.result})}'+
+    'function mk(s,f){return new Proxy({},{get:function(_,n){'+
+    'if(n==="withSuccessHandler")return function(h){return mk(h,f)};'+
+    'if(n==="withFailureHandler")return function(h){return mk(s,h)};'+
+    'if(n==="withUserObject")return function(){return mk(s,f)};'+
+    'return function(){var a=[].slice.call(arguments);call(n,a).then(function(r){if(s)s(r)},function(e){if(f)f(e);else console.error(e)})}}})}'+
+    'window.google=window.google||{};window.google.script={run:mk(null,null),host:{close:function(){},setHeight:function(){},setWidth:function(){}}};})();<\/script>';
+
+  function show(html){
+    html=html.replace(/<head>/i,'<head>'+SHIM+ICONS);
+    document.open();document.write(html);document.close();
+  }
+  function fail(e){
+    document.getElementById('dot').style.display='none';
+    document.getElementById('msg').textContent='Could not open the app. Check your signal and tap Try again.';
+    var b=document.getElementById('again');b.style.display='inline-block';
+    b.onclick=function(){location.reload()};
+  }
+  if(!KEY){fail();document.getElementById('msg').textContent='This link is missing its key. Ask SanoCare (Amber) for Michele\'s link.';document.getElementById('again').style.display='none';}
+  else call('shell',[KEY]).then(show).catch(fail);
+})();
+</script>
+</body>
+</html>
